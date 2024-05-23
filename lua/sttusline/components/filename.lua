@@ -1,5 +1,4 @@
 local fn = vim.fn
-local get_option = vim.api.nvim_buf_get_option
 
 local colors = require("sttusline.utils.color")
 
@@ -53,14 +52,14 @@ return {
 
 		if not icon then
 			local extensions = configs.extensions
-			local buftype = get_option(0, "buftype")
+			local buftype = vim.bo.buftype
 
 			local extension = extensions.buftypes[buftype]
 			if extension then
 				icon, color_icon, filename =
 					extension[1], extension[2], extension[3] or filename ~= "" and filename or buftype
 			else
-				local filetype = get_option(0, "filetype")
+				local filetype = vim.bo.filetype
 				extension = extensions.filetypes[filetype]
 				if extension then
 					icon, color_icon, filename =
@@ -71,13 +70,13 @@ return {
 
 		if filename == "" then filename = "No File" end
 
-		if not get_option(0, "modifiable") or get_option(0, "readonly") then
+		if not vim.bo.modifiable or vim.bo.readonly then
 			return {
 				icon and { icon .. " ", { fg = color_icon } } or "",
 				filename,
 				{ " ", { fg = colors.red } },
 			}
-		elseif get_option(0, "modified") then
+		elseif vim.bo.modified then
 			return {
 				icon and { icon .. " ", { fg = color_icon } } or "",
 				filename,

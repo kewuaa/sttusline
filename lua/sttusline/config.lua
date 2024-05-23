@@ -135,14 +135,14 @@ local configs = {
 
 				if not icon then
 					local extensions = configs.extensions
-					local buftype = api.nvim_buf_get_option(0, "buftype")
+					local buftype = vim.bo.buftype
 
 					local extension = extensions.buftypes[buftype]
 					if extension then
 						icon, color_icon, filename =
 							extension[1], extension[2], extension[3] or filename ~= "" and filename or buftype
 					else
-						local filetype = api.nvim_buf_get_option(0, "filetype")
+						local filetype = vim.bo.filetype
 						extension = extensions.filetypes[filetype]
 						if extension then
 							icon, color_icon, filename =
@@ -154,14 +154,14 @@ local configs = {
 				if filename == "" then filename = "No File" end
 
 				-- check if file is read-only
-				if not api.nvim_buf_get_option(0, "modifiable") or api.nvim_buf_get_option(0, "readonly") then
+				if not vim.bo.modifiable or vim.bo.readonly then
 					return {
 						icon and { icon .. " ", { fg = color_icon } } or "",
 						filename,
 						{ " ", { fg = colors.red } },
 					}
 				-- check if unsaved
-				elseif api.nvim_buf_get_option(0, "modified") then
+				elseif vim.bo.modified then
 					return {
 						icon and { icon .. " ", { fg = color_icon } } or "",
 						filename,
@@ -199,7 +199,7 @@ local configs = {
 				local branch = space.get_branch()
 				return branch ~= "" and configs.icon .. " " .. branch or ""
 			end,
-			condition = function() return api.nvim_buf_get_option(0, "buflisted") end,
+			condition = function() return vim.bo.buflisted end,
 		},
 		{
 			name = "git-diff",
@@ -285,7 +285,7 @@ local configs = {
 				return result
 			end,
 			condition = function()
-				return api.nvim_buf_get_option(0, "filetype") ~= "lazy"
+				return vim.bo.filetype ~= "lazy"
 					and not api.nvim_buf_get_name(0):match("%.env$")
 			end,
 		},
@@ -294,7 +294,7 @@ local configs = {
 			event = { "LspAttach", "LspDetach", "BufWritePost", "BufEnter", "VimResized" },
 			colors = { fg = colors.magenta },
 			update = function()
-				local buf_clients = vim.lsp.buf_get_clients()
+				local buf_clients = vim.lsp.get_clients({bufnr=0})
 				local server_names = {}
 				local has_null_ls = false
 				local ignore_lsp_servers = {
@@ -312,7 +312,7 @@ local configs = {
 					has_null_ls, null_ls = pcall(require, "null-ls")
 
 					if has_null_ls then
-						local buf_ft = api.nvim_buf_get_option(0, "filetype")
+						local buf_ft = vim.bo.filetype
 						local null_ls_methods = {
 							null_ls.methods.DIAGNOSTICS,
 							null_ls.methods.DIAGNOSTICS_ON_OPEN,
@@ -380,7 +380,6 @@ local configs = {
 			init = function(configs)
 				local nvim_exec_autocmds = api.nvim_exec_autocmds
 				local schedule = vim.schedule
-				local buf_get_option = api.nvim_buf_get_option
 				local sttusline_copilot_timer = uv.new_timer()
 				api.nvim_create_autocmd("InsertEnter", {
 					once = true,
@@ -391,7 +390,7 @@ local configs = {
 							cp_api.register_status_notification_handler(function(data)
 								schedule(function()
 									-- don't need to get status when in TelescopePrompt
-									if buf_get_option(0, "buftype") == "prompt" then return end
+									if vim.bo.buftype == "prompt" then return end
 									g.sttusline_copilot_status = string.lower(data.status or "")
 
 									if g.sttusline_copilot_status == "inprogress" then
@@ -483,7 +482,7 @@ local configs = {
 			name = "indent",
 			update_group = "BUF_WIN_ENTER",
 			colors = { fg = colors.cyan },
-			update = function() return "Tab: " .. api.nvim_buf_get_option(0, "shiftwidth") .. "" end,
+			update = function() return "Tab: " .. vim.bo.shiftwidth .. "" end,
 		},
 		{
 			name = "encoding",
